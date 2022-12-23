@@ -129,12 +129,12 @@ export const selectUserUrls = async (req, res) => {
     }
 
     const userInfo = await db.query(
-      "SELECT users.id, name, sum(urls.visit_count) as visitCount FROM users JOIN urls ON users.id=urls.user_id WHERE users.id=$1 GROUP BY users.id;",
+      'SELECT users.id, name, sum(urls.visit_count) as "visitCount" FROM users JOIN urls ON users.id=urls.user_id WHERE users.id=$1 GROUP BY users.id;',
       [userSession.rows[0].user_id]
     );
 
     const urlsInfo = await db.query(
-      "SELECT urls.id, urls.url, urls.short_url as shortUrl, urls.visit_count as visitCount FROM urls WHERE urls.user_id=$1",
+      'SELECT urls.id, urls.url, urls.short_url as "shortUrl", urls.visit_count as "visitCount" FROM urls WHERE urls.user_id=$1',
       [userSession.rows[0].user_id]
     );
 
