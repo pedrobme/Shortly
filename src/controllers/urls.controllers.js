@@ -102,9 +102,45 @@ export const deleteOneUrl = async (req, res) => {
       return;
     }
 
-    await db.query("DELETE from urls WHERE id=$1", [params.id]);
+    await db.query("DELETE FROM urls WHERE id=$1", [params.id]);
 
     res.status(204).send("Url deleted");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+export const selectUserUrls = async (req, res) => {
+  let authToken = req.headers.authorization;
+
+  if (authToken) {
+    authToken = authToken.split(" ")[1];
+  }
+
+  try {
+    const userSession = await db.query(
+      "SELECT * FROM sessions WHERE token=$1",
+      [authToken]
+    );
+
+    if (userSession.rowCount == 0) {
+      res.status(401).send("Invalid authorization token");
+      return;
+    }
+
+    const userInfo = await db.query(
+      "SELECT users.id, name, sum(urls.visit_count) as visitCount FROM users JOIN urls ON users.id=urls.user_id WHERE users.id=$1 GROUP BY users.id;",
+      [userSession.rows[0].user_id]
+    );
+
+    const urlsInfo = await db.query(
+      "SELECT urls.id, urls.url, urls.short_url as shortUrl, urls.visit_count as visitCount FROM urls WHERE urls.user_id=$1",
+      [userSession.rows[0].user_id]
+    );
+
+    const userObject = { ...userInfo.rows[0], shortenedUrls: urlsInfo.rows };
+
+    res.status(200).send(userObject);
   } catch (err) {
     res.status(500).send(err.message);
   }
