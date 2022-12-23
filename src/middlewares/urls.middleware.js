@@ -3,7 +3,7 @@ import { db } from "../database/server.js";
 import shortenUrlSchema from "../models/shorten.model.js";
 import joiSchemaValidation from "../utils/joiSchemaValidation.js";
 
-const shortenUrlValidation = async (req, res, next) => {
+export const shortenUrlValidation = async (req, res, next) => {
   const receivedUrl = req.body;
   let authToken = req.headers.authorization;
 
@@ -43,5 +43,3 @@ const shortenUrlValidation = async (req, res, next) => {
     res.status(500).send(err.message);
   }
 };
-
-export default shortenUrlValidation;
