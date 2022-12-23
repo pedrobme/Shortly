@@ -36,13 +36,12 @@ const signinValidation = async (req, res, next) => {
         emailExists.rows[0].id,
         sessionToken,
       ]);
-      res.status(200).send({ token: sessionToken });
-
-      next();
+      res.status(200).send(sessionToken);
       return;
     }
 
     res.status(422).send("Email and Password does not match");
+
     return;
   } catch (err) {
     res.status(500).send(err.message);
