@@ -33,6 +33,7 @@ export const selectOneUrlById = async (req, res) => {
       res.status(404).send("Url does not exists");
       return;
     }
+
     res.status(200).send(urlSelect.rows[0]);
   } catch (err) {
     res.status(500).send(err.message);
@@ -58,6 +59,52 @@ export const shortUrlRedirect = async (req, res) => {
     ]);
 
     res.redirect(urlSelect.rows[0].url);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+export const deleteOneUrl = async (req, res) => {
+  const params = req.params;
+  let authToken = req.headers.authorization;
+
+  if (authToken) {
+    authToken = authToken.split(" ")[1];
+  }
+
+  try {
+    const urlSelect = await db.query("SELECT * FROM urls WHERE id=$1", [
+      params.id,
+    ]);
+
+    if (urlSelect.rowCount == 0) {
+      res.status(404).send("Url does not exists");
+      return;
+    }
+
+    const userSession = await db.query(
+      "SELECT * FROM sessions WHERE token=$1",
+      [authToken]
+    );
+
+    if (userSession.rowCount == 0) {
+      res.status(401).send("Invalid authorization token");
+      return;
+    }
+
+    const userIsUrlOwner = await db.query(
+      "SELECT * FROM urls WHERE user_id=$1 AND id=$2;",
+      [userSession.rows[0].user_id, params.id]
+    );
+
+    if (userIsUrlOwner.rowCount == 0) {
+      res.status(401).send("User don't own this url");
+      return;
+    }
+
+    await db.query("DELETE from urls WHERE id=$1", [params.id]);
+
+    res.status(204).send("Url deleted");
   } catch (err) {
     res.status(500).send(err.message);
   }
